@@ -1,8 +1,10 @@
+import { RepeatIcon } from '@chakra-ui/icons'
 import {
 	Box,
 	Button,
 	Center,
 	ChakraProvider,
+	Code,
 	Container,
 	Drawer,
 	DrawerBody,
@@ -11,10 +13,12 @@ import {
 	DrawerFooter,
 	DrawerHeader,
 	DrawerOverlay,
+	Flex,
 	FormLabel,
 	Input,
 	Switch,
 	useDisclosure,
+	useToast,
 	VStack,
 } from '@chakra-ui/react'
 import { useEffect, useState } from 'react'
@@ -86,6 +90,10 @@ const generateKeys = arrSimple => {
 	}
 	const d = (1 + i * phi) / e
 
+	console.log({
+		publicKey: { e, n },
+		privateKey: { d, n },
+	})
 	return {
 		publicKey: { e, n },
 		privateKey: { d, n },
@@ -94,18 +102,13 @@ const generateKeys = arrSimple => {
 
 function modExp(base, exp, mod) {
 	if (mod <= 0) {
-		console.error('Ошибка: модуль не должен быть меньше или равен 0.')
 		return NaN
 	}
-	let result = 1
-	base = base % mod
 
-	while (exp > 0) {
-		if (exp % 2 === 1) {
-			result = (result * base) % mod
-		}
-		exp = Math.floor(exp / 2)
-		base = (base * base) % mod
+	let result = 1
+
+	for (let i = 0; i < exp; i++) {
+		result = (result * base) % mod
 	}
 
 	return result
@@ -116,30 +119,38 @@ const Lab_2 = () => {
 	const [inputValue, setInputValue] = useState('')
 	const [arrSimpleNumber, setArrSimpleNumber] = useState([])
 	const [drawerContent, setDrawerContent] = useState('')
+	const [{ publicKey, privateKey }, setKeys] = useState({
+		publicKey: { e: 3, n: 55 },
+		privateKey: { d: 27, n: 55 },
+	})
+	const toast = useToast()
 
 	// const { publicKey, privateKey } = generateKeys(arrSimpleNumber)
-	const { publicKey, privateKey } = { publicKey: { e: 3, n: 55 }, privateKey: { d: 27, n: 55 } }
 
 	useEffect(() => {
-		const max = 1000000
+		const max = 100
 		const arrSN = sieveOfEratosthenes(max)
 		setArrSimpleNumber(arrSN)
 		console.log(`Простые числа до ${max} сгенерированы`)
 	}, [])
 
+	const handleUpdatingKeys = () => {
+		setKeys(generateKeys(arrSimpleNumber))
+	}
+
 	const handleEncrypt = message => {
 		const { e, n } = publicKey
 		const encryptedMessage = []
 		console.log('Начало')
-		for (let char of message) {
-			let codeChar = char.charCodeAt(0).toString()
-			console.log('Код символа: ', char, codeChar)
-			for (let c of codeChar) {
-				console.log('Цифра: ', c)
+		for (let symbol of message) {
+			let codeSymbol = symbol.charCodeAt(0).toString()
+			console.log('Код символа: ', symbol, codeSymbol)
+			for (let char of codeSymbol) {
+				console.log('Цифра: ', char)
 
-				const m = modExp(c, e, n)
-				const paddedCipher = m.toString().padStart(8, '0')
-				encryptedMessage.push(paddedCipher)
+				const m = (Math.pow(char, e) % n).toString().padStart(8, '0')
+
+				encryptedMessage.push(m)
 			}
 			encryptedMessage.push('11110011')
 		}
@@ -154,14 +165,14 @@ const Lab_2 = () => {
 		let decryptedMessage = ''
 		const chars = message.split('11110011').slice(0, -1)
 		console.log('массив символов: ', chars)
+		// 00000013, ,00000008, ,00000001,00000000,00000015,
 		for (let char of chars) {
 			const charsCodes = char.match(/.{1,8}/g) || []
 			console.log('массив кодов символов: ', charsCodes)
 			let symbol = ''
 			for (let charCode of charsCodes) {
-				const c = parseInt(charCode, 10)
-				const m = modExp(c, d, n)
-				console.log('Возводим в степень: ', Math.pow(c, d), ' и ', m)
+				const m = modExp(parseInt(charCode, 10), d, n)
+				// console.log('Возводим в степень: ', Math.pow(c, d), ' и ', m)
 				symbol += m
 			}
 
@@ -173,78 +184,86 @@ const Lab_2 = () => {
 		onOpen()
 	}
 
-	// const handleEncrypt = message => {
-	// 	const { e, n } = publicKey
-	// 	const encryptedMessage = []
-	// 	console.log('ключ шифр: ', e, ' ', n)
-	// 	for (let char of message) {
-	// 		console.log('Код символа: ', char.charCodeAt(0))
-	// 		const c = modExp(char.charCodeAt(0), e, n)
-	// 		if (isNaN(c)) {
-	// 			console.error('Ошибка при шифровании, c = NaN для символа: ', char)
-	// 			return // Прерываем выполнение, если c является NaN
-	// 		}
-	// 		// console.log('Возводим в степень: ', modExp(char.charCodeAt(0), e), ' и ', modExp(char.charCodeAt(0), e) % n)
-	// 		const paddedCipher = c.toString().padStart(8, '0')
-	// 		encryptedMessage.push(paddedCipher)
-	// 	}
+	const handleCopy = () => {
+		let contentToCopy = ''
+		if (Array.isArray(drawerContent)) {
+			contentToCopy = drawerContent.join('')
+		} else {
+			contentToCopy = drawerContent
+		}
 
-	// 	setDrawerContent(encryptedMessage)
-	// 	console.log(encryptedMessage)
-	// 	onOpen()
-	// }
-
-	// const handleDecrypt = message => {
-	// 	const { d, n } = privateKey
-	// 	let decryptedMessage = ''
-	// 	const chunks = message.match(/.{1,8}/g) || []
-	// 	console.log('ключ дешифр: ', d, ' ', n)
-	// 	for (let chunk of chunks) {
-	// 		const c = parseInt(chunk, 10)
-	// 		if (isNaN(c)) {
-	// 			console.error('Ошибка при дешифровании, c = NaN для чанка: ', chunk)
-	// 			return // Прерываем выполнение, если c является NaN
-	// 		}
-	// 		console.log('  ', chunk)
-	// 		const m = modExp(c, d, n)
-	// 		if (isNaN(m)) {
-	// 			console.error('Ошибка при дешифровании, m = NaN для c: ', c)
-	// 			return // Прерываем выполнение, если m является NaN
-	// 		}
-	// 		// console.log('Возводим в степень: ', modExp(c, d), ' и ', modExp(c, d) % n)
-	// 		console.log('код символа', m)
-	// 		decryptedMessage += String.fromCharCode(m)
-	// 	}
-
-	// 	setDrawerContent(decryptedMessage)
-	// 	console.log(decryptedMessage)
-	// 	onOpen()
-	// }
+		navigator.clipboard
+			.writeText(contentToCopy)
+			.then(() => {
+				toast({
+					title: 'Сообщение скопировано',
+					status: 'success',
+					duration: 1000,
+					isClosable: true,
+				})
+			})
+			.catch(err => {
+				console.log(err)
+				toast({
+					title: 'Возникла ошибка',
+					status: 'error',
+					duration: 1000,
+					isClosable: true,
+				})
+			})
+	}
 
 	return (
-		<Container maxW="800px" h="100vh" display="flex" alignItems="center" justifyContent="center">
+		<Container
+			maxW='800px'
+			h='100vh'
+			display='flex'
+			alignItems='center'
+			justifyContent='center'
+		>
 			<VStack spacing={4}>
-				<Input placeholder="Введите что угодно..." value={inputValue} onChange={e => setInputValue(e.target.value)} />
-				<Button colorScheme="teal" onClick={() => handleEncrypt(inputValue)}>
+				<Flex gap={2} alignItems='center'>
+					<Button
+						variant='outline'
+						borderColor='teal'
+						onClick={handleUpdatingKeys}
+					>
+						<RepeatIcon color='teal' />
+					</Button>
+					<Box>
+						<p>Открытый ключ: {`{ e: ${publicKey.e}, n: ${publicKey.n}}`}</p>
+						<p>Закрытый ключ: {`{ d: ${privateKey.d}, n: ${privateKey.n}}`}</p>
+					</Box>
+				</Flex>
+
+				<Input
+					type='search'
+					placeholder='Введите что угодно...'
+					value={inputValue}
+					onChange={e => setInputValue(e.target.value)}
+				/>
+				<Button colorScheme='teal' onClick={() => handleEncrypt(inputValue)}>
 					Зашифровать сообщение
 				</Button>
-				<Button colorScheme="red" onClick={() => handleDecrypt(inputValue)}>
+				<Button colorScheme='red' onClick={() => handleDecrypt(inputValue)}>
 					Расшифровать сообщение
 				</Button>
 			</VStack>
 
-			<Drawer isOpen={isOpen} placement="right" onClose={onClose} size={'md'}>
+			<Drawer isOpen={isOpen} placement='right' onClose={onClose} size={'md'}>
 				<DrawerOverlay />
 				<DrawerContent>
 					<DrawerCloseButton />
 					<DrawerHeader>Результат</DrawerHeader>
 
 					<DrawerBody>
-						<p>Зашифрованное сообщение: {drawerContent}</p>
+						<p onClick={handleCopy} style={{ cursor: 'pointer' }}>
+							Зашифрованное сообщение: <Code width={'md'}>{drawerContent}</Code>
+						</p>
 					</DrawerBody>
 
 					<DrawerFooter>
-						<Button variant="outline" mr={3} onClick={onClose}>
+						<Button variant='outline' mr={3} onClick={onClose}>
 							Закрыть
 						</Button>
 					</DrawerFooter>
