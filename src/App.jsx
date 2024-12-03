@@ -1,5 +1,5 @@
 import './app.css'
-import { BrowserRouter as Router, Route, Routes, NavLink } from 'react-router-dom'
+import { Route, Routes, NavLink } from 'react-router-dom'
 import { Lab_1, Lab_2, Lab_3, Lab_4 } from './pages'
 import { ChakraProvider, position } from '@chakra-ui/react'
 
@@ -29,15 +29,13 @@ const styles = {
 function App() {
 	return (
 		<ChakraProvider>
-			<Router>
-				<Header />
-				<Routes>
-					<Route path="/SurGU_Code_Hamming/Lab_4" element={<Lab_4 />} />
-					<Route path="/SurGU_Code_Hamming/Lab_3" element={<Lab_3 />} />
-					<Route path="/SurGU_Code_Hamming/Lab_2" element={<Lab_2 />} />
-					<Route path="/SurGU_Code_Hamming/" element={<Lab_1 />}></Route>
-				</Routes>
-			</Router>
+			<Header />
+			<Routes>
+				<Route path="/Lab_4" element={<Lab_4 />} />
+				<Route path="/Lab_3" element={<Lab_3 />} />
+				<Route path="/Lab_2" element={<Lab_2 />} />
+				<Route path="/" element={<Lab_1 />}></Route>
+			</Routes>
 		</ChakraProvider>
 	)
 }
@@ -45,16 +43,16 @@ function App() {
 function Header() {
 	return (
 		<header style={styles.header}>
-			<NavLink to="/SurGU_Code_Hamming/" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
+			<NavLink to="/" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
 				Hamming
 			</NavLink>
-			<NavLink to="/SurGU_Code_Hamming/Lab_2" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
+			<NavLink to="/Lab_2" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
 				RSA
 			</NavLink>
-			<NavLink to="/SurGU_Code_Hamming/Lab_3" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
+			<NavLink to="/Lab_3" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
 				Hafman
 			</NavLink>
-			<NavLink to="/SurGU_Code_Hamming/Lab_4" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
+			<NavLink to="/Lab_4" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
 				LSB
 			</NavLink>
 		</header>
