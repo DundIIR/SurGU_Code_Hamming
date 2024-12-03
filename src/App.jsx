@@ -1,5 +1,6 @@
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom'
-import { Lab_1, Lab_2 } from './pages'
+import './app.css'
+import { BrowserRouter as Router, Route, Routes, NavLink } from 'react-router-dom'
+import { Lab_1, Lab_2, Lab_3, Lab_4 } from './pages'
 import { ChakraProvider, position } from '@chakra-ui/react'
 
 const styles = {
@@ -31,6 +32,8 @@ function App() {
 			<Router>
 				<Header />
 				<Routes>
+					<Route path="/Lab_4" element={<Lab_4 />} />
+					<Route path="/Lab_3" element={<Lab_3 />} />
 					<Route path="/Lab_2" element={<Lab_2 />} />
 					<Route path="/" element={<Lab_1 />}></Route>
 				</Routes>
@@ -42,12 +45,18 @@ function App() {
 function Header() {
 	return (
 		<header style={styles.header}>
-			<Link to="/" style={styles.button}>
+			<NavLink to="/" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
 				Hamming
-			</Link>
-			<Link to="/Lab_2" style={styles.button}>
+			</NavLink>
+			<NavLink to="/Lab_2" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
 				RSA
-			</Link>
+			</NavLink>
+			<NavLink to="/Lab_3" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
+				Hafman
+			</NavLink>
+			<NavLink to="/Lab_4" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
+				LSB
+			</NavLink>
 		</header>
 	)
 }
