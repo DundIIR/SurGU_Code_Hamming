@@ -176,14 +176,14 @@ const decryptMessageFromImage = async (imageFile, bitsToReplace) => {
 
 						binaryMessage += messageBit.toString(2).padStart(+bitsToReplace, '0')
 
-						if (j < 20 || j > binaryMessage.length - 20) {
-							console.log(
-								`Пиксель-бит ${i} который ${pixelValue} - ${pixelValueBinary}: забрали ${messageBit
-									.toString(2)
-									.padStart(+bitsToReplace, '0')}`,
-								`маска - ${mask}`,
-							)
-						}
+						// if (j < 20 || j > binaryMessage.length - 20) {
+						// 	console.log(
+						// 		`Пиксель-бит ${i} который ${pixelValue} - ${pixelValueBinary}: забрали ${messageBit
+						// 			.toString(2)
+						// 			.padStart(+bitsToReplace, '0')}`,
+						// 		`маска - ${mask}`,
+						// 	)
+						// }
 
 						j++
 					}
@@ -207,7 +207,7 @@ const decryptMessageFromImage = async (imageFile, bitsToReplace) => {
 					message += String.fromCharCode(parseInt(byte, 2))
 				}
 
-				console.log(message)
+				console.log('Сообщение: ' + message)
 
 				resolve(message)
 			}
@@ -252,7 +252,7 @@ const Lab_4 = () => {
 		if (!uploadedFile || !inputMessage || selectedBits.length === 0) {
 			toast({
 				title: 'Ошибка',
-				description: 'Необходимо загрузить изображение и ввести сообщение',
+				description: 'Необходимо загрузить изображение, ввести сообщение и выбрать ключ',
 				status: 'error',
 				duration: 2000,
 				isClosable: true,
@@ -318,10 +318,10 @@ const Lab_4 = () => {
 	}
 
 	const handleDecrypt = async () => {
-		if (!uploadedFile) {
+		if (!uploadedFile || selectedBits.length === 0) {
 			toast({
 				title: 'Ошибка',
-				description: 'Необходимо загрузить изображение для дешифрования',
+				description: 'Необходимо загрузить изображение и выбрать ключ',
 				status: 'error',
 				duration: 2000,
 				isClosable: true,
@@ -330,12 +330,29 @@ const Lab_4 = () => {
 		}
 
 		try {
+			const decryptedMessages = []
 			// Дешифруем сообщение с использованием 1 бита
-			console.log('Начали дешифрование')
-			const decryptedMessage = await decryptMessageFromImage(uploadedFile, inputMessage)
+			for (let bit of selectedBits) {
+				const decryptedMessage = await decryptMessageFromImage(uploadedFile, bit)
+				decryptedMessages.push({ bit, decryptedMessage })
+			}
 
+			setDrawerContent(
+				<>
+					<p>Дешифрованные сообщения:</p>
+					<ul>
+						{decryptedMessages.map(({ bit, decryptedMessage }) => (
+							<li key={bit}>
+								<p>
+									Для ключа {bit}: {decryptedMessage}
+								</p>
+							</li>
+						))}
+					</ul>
+				</>,
+			)
 			// Показываем дешифрованное сообщение
-			setDrawerContent(`Дешифрованное сообщение: ${decryptedMessage}`)
+			// setDrawerContent(`Дешифрованное сообщение: ${decryptedMessage}`)
 			onOpen()
 		} catch (error) {
 			toast({
