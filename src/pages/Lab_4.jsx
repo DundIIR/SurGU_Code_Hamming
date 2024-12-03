@@ -4,6 +4,7 @@ import {
 	Checkbox,
 	Code,
 	Container,
+	Divider,
 	Drawer,
 	DrawerBody,
 	DrawerCloseButton,
@@ -13,12 +14,14 @@ import {
 	DrawerOverlay,
 	HStack,
 	Input,
+	List,
+	ListItem,
+	Text,
 	Textarea,
 	useDisclosure,
 	useToast,
 	VStack,
 } from '@chakra-ui/react'
-import { jsx } from '@emotion/react'
 import { CheckCircleIcon, DownloadIcon } from '@chakra-ui/icons'
 import { useState } from 'react'
 
@@ -37,11 +40,19 @@ const encryptMessageInImage = async (imageFile, message, bitsToReplace = 1) => {
 				const imageData = ctx.getImageData(0, 0, img.width, img.height)
 				const data = imageData.data
 
-				// Преобразуем сообщение в бинарный вид, где каждый символ будет кодироваться одним байтом
-				let binaryMessage = message // 1 -> 49 -> 00110001
-					.split('')
-					.map(char => char.charCodeAt(0).toString(2).padStart(8, '0'))
-					.join('')
+				// // Преобразуем сообщение в бинарный вид, где каждый символ будет кодироваться одним байтом
+				// let binaryMessage = message // 1 -> 49 -> 00110001
+				// 	.split('')
+				// 	.map(char => char.charCodeAt(0).toString(2).padStart(8, '0'))
+				// 	.join('')
+				let binaryMessage = ''
+				const encoder = new TextEncoder() // Кодирует в UTF-8
+				const encodedMessage = encoder.encode(message)
+
+				// Преобразуем каждый байт в двоичное представление
+				for (let byte of encodedMessage) {
+					binaryMessage += byte.toString(2).padStart(8, '0')
+				}
 
 				const missingBits = binaryMessage.length % +bitsToReplace
 				console.log('Не хватает до целого: ' + missingBits)
@@ -207,9 +218,12 @@ const decryptMessageFromImage = async (imageFile, bitsToReplace) => {
 					message += String.fromCharCode(parseInt(byte, 2))
 				}
 
-				console.log('Сообщение: ' + message)
+				// Используем TextDecoder для декодирования UTF-8
+				const decoder = new TextDecoder('utf-8')
+				const decodedMessage = decoder.decode(new Uint8Array(message.split('').map(c => c.charCodeAt(0))))
+				console.log('Сообщение: ' + decodedMessage)
 
-				resolve(message)
+				resolve(decodedMessage)
 			}
 
 			img.onerror = () => reject('Ошибка загрузки изображения.')
@@ -293,18 +307,6 @@ const Lab_4 = () => {
 				</>,
 			)
 
-			// setDrawerContent(
-			// 	<>
-			// 		<p>Сообщение зашифровано. Измененные изображения готовы.</p>
-			// 		{downloadLinks.map(({ bit, link }) => (
-			// 			<a key={bit} href={link} download={`encrypted_${bit}bit.png`}>
-			// 				<Button mt={4} colorScheme="teal">
-			// 					Скачать изображение ({bit} бит заменён)
-			// 				</Button>
-			// 			</a>
-			// 		))}
-			// 	</>,
-			// )
 			onOpen()
 		} catch (error) {
 			toast({
@@ -339,18 +341,37 @@ const Lab_4 = () => {
 
 			setDrawerContent(
 				<>
-					<p>Дешифрованные сообщения:</p>
-					<ul>
+					<List spacing={4}>
 						{decryptedMessages.map(({ bit, decryptedMessage }) => (
-							<li key={bit}>
-								<p>
-									Для ключа {bit}: {decryptedMessage}
-								</p>
-							</li>
+							<ListItem key={bit}>
+								<Box p={4} bg="gray.50" borderRadius="md" boxShadow="md" mb={4}>
+									<Text fontSize="md" fontWeight="semibold" color="gray.600" mb={2}>
+										Для ключа <strong>{bit}</strong>:
+									</Text>
+									<Text fontSize="sm" color="gray.500" bg="white" borderRadius="md" p={2} boxShadow="sm" wordBreak="break-word">
+										{decryptedMessage}
+									</Text>
+								</Box>
+							</ListItem>
 						))}
-					</ul>
+					</List>
 				</>,
 			)
+
+			// setDrawerContent(
+			// 	<>
+			// 		<p>Дешифрованные сообщения:</p>
+			// 		<ul>
+			// 			{decryptedMessages.map(({ bit, decryptedMessage }) => (
+			// 				<li key={bit}>
+			// 					<p>
+			// 						Для ключа {bit}: {decryptedMessage}
+			// 					</p>
+			// 				</li>
+			// 			))}
+			// 		</ul>
+			// 	</>,
+			// )
 			// Показываем дешифрованное сообщение
 			// setDrawerContent(`Дешифрованное сообщение: ${decryptedMessage}`)
 			onOpen()
