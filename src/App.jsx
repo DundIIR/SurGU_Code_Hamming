@@ -32,10 +32,10 @@ function App() {
 			<Router>
 				<Header />
 				<Routes>
-					<Route path="/Lab_4" element={<Lab_4 />} />
-					<Route path="/Lab_3" element={<Lab_3 />} />
-					<Route path="/Lab_2" element={<Lab_2 />} />
-					<Route path="/" element={<Lab_1 />}></Route>
+					<Route path="/SurGU_Code_Hamming/Lab_4" element={<Lab_4 />} />
+					<Route path="/SurGU_Code_Hamming/Lab_3" element={<Lab_3 />} />
+					<Route path="/SurGU_Code_Hamming/Lab_2" element={<Lab_2 />} />
+					<Route path="/SurGU_Code_Hamming/" element={<Lab_1 />}></Route>
 				</Routes>
 			</Router>
 		</ChakraProvider>
@@ -45,16 +45,16 @@ function App() {
 function Header() {
 	return (
 		<header style={styles.header}>
-			<NavLink to="/" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
+			<NavLink to="/SurGU_Code_Hamming/" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
 				Hamming
 			</NavLink>
-			<NavLink to="/Lab_2" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
+			<NavLink to="/SurGU_Code_Hamming/Lab_2" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
 				RSA
 			</NavLink>
-			<NavLink to="/Lab_3" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
+			<NavLink to="/SurGU_Code_Hamming/Lab_3" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
 				Hafman
 			</NavLink>
-			<NavLink to="/Lab_4" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
+			<NavLink to="/SurGU_Code_Hamming/Lab_4" style={styles.button} className={({ isActive }) => (isActive ? 'active' : '')}>
 				LSB
 			</NavLink>
 		</header>
