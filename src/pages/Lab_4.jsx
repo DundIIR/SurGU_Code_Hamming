@@ -57,14 +57,24 @@ const encryptMessageInImage = async (imageFile, message, bitsToReplace = 1) => {
 				const missingBits = binaryMessage.length % +bitsToReplace
 				console.log('Не хватает до целого: ' + missingBits)
 				if (missingBits !== 0) {
-					binaryMessage = binaryMessage.padEnd(binaryMessage.length + (+bitsToReplace - missingBits), '0')
+					binaryMessage = binaryMessage.padEnd(
+						binaryMessage.length + (+bitsToReplace - missingBits),
+						'0'
+					)
 				}
 				// Находим длину бинарного сообщения и преобразуем длину в бинарный вид на 4 байта
-				const binaryMessageLength = binaryMessage.length.toString(2).padStart(32, '0') // 32 бита для длины
+				const binaryMessageLength = binaryMessage.length
+					.toString(2)
+					.padStart(32, '0') // 32 бита для длины
 
 				// Вставляем длину сообщения в первые 11 пикселей
 				// Т.к. длину кодируем 32 битами, а в каждый пиксель можно вставить по 3 бита, длина займет 11 пикселей
-				console.log('Данные сообщения: ', message, binaryMessage, binaryMessage.length)
+				console.log(
+					'Данные сообщения: ',
+					message,
+					binaryMessage,
+					binaryMessage.length
+				)
 				let i = 0
 				for (let j = 0; j < 32; i++) {
 					let messageBit = binaryMessageLength.slice(j, j + 1)
@@ -79,14 +89,19 @@ const encryptMessageInImage = async (imageFile, message, bitsToReplace = 1) => {
 				}
 
 				let messageIndex = 0
+				let countPixels = 0
 				for (let j = 0; i < data.length; i++) {
 					if (messageIndex >= binaryMessage.length) break
 
 					// пропускаем пиксели с прозрачностью не 255
 					if (data[3 - (i % 4) + i] == 255 && (i + 1) % 4 !== 0) {
+						countPixels++
 						const pixelValue = data[i]
 
-						let messageBit = binaryMessage.slice(messageIndex, messageIndex + +bitsToReplace)
+						let messageBit = binaryMessage.slice(
+							messageIndex,
+							messageIndex + +bitsToReplace
+						)
 						messageIndex += +bitsToReplace
 
 						// Заменяем младшие биты пикселя на биты сообщения
@@ -99,13 +114,23 @@ const encryptMessageInImage = async (imageFile, message, bitsToReplace = 1) => {
 						data[i] = newValue
 						if (j < 20 || j > binaryMessage.length - 20) {
 							console.log(
-								`Пиксель-бит ${i} который был ${pixelValue} - ${pixelValue.toString(2)}: `,
-								`${data[i]} - ${data[i].toString(2)} добавили ${parseInt(messageBit, 2)} где messageIndex: ${messageIndex}`,
+								`Пиксель-бит ${i} который был ${pixelValue} - ${pixelValue.toString(
+									2
+								)}: `,
+								`${data[i]} - ${data[i].toString(2)} добавили ${parseInt(
+									messageBit,
+									2
+								)} где messageIndex: ${messageIndex}`
 							)
 						}
 						j += +bitsToReplace
 					}
 				}
+
+				console.log(
+					`Количество пикселей для ${bitsToReplace} ключей: ${countPixels / 3}`
+				)
+				countPixels = (countPixels / 3).toFixed(2)
 
 				if (messageIndex < binaryMessage.length) {
 					reject('Изображение маленькое для шифрования всего сообщения.')
@@ -117,7 +142,9 @@ const encryptMessageInImage = async (imageFile, message, bitsToReplace = 1) => {
 
 				// console.log('Данные пикселей с холста: ', ctx.getImageData(0, 0, img.width, img.height).data)
 
-				canvas.toBlob(resolve, 'image/png')
+				canvas.toBlob(encrypted => {
+					resolve({ encrypted, countPixels })
+				}, 'image/png')
 			}
 			img.onerror = () => reject('Ошибка загрузки изображения.')
 		}
@@ -185,7 +212,9 @@ const decryptMessageFromImage = async (imageFile, bitsToReplace) => {
 						let mask = (1 << +bitsToReplace) - 1
 						let messageBit = pixelValue & mask // Получаем младшие биты пикселя
 
-						binaryMessage += messageBit.toString(2).padStart(+bitsToReplace, '0')
+						binaryMessage += messageBit
+							.toString(2)
+							.padStart(+bitsToReplace, '0')
 
 						// if (j < 20 || j > binaryMessage.length - 20) {
 						// 	console.log(
@@ -210,7 +239,9 @@ const decryptMessageFromImage = async (imageFile, bitsToReplace) => {
 				if (missingBits !== 0) {
 					binaryMessage = binaryMessage.slice(0, -missingBits)
 				}
-				console.log(`Сообщение в бинарном виде: ${binaryMessage} - ${binaryMessage.length}`)
+				console.log(
+					`Сообщение в бинарном виде: ${binaryMessage} - ${binaryMessage.length}`
+				)
 
 				let message = ''
 				for (let i = 0; i < binaryMessage.length; i += 8) {
@@ -220,7 +251,9 @@ const decryptMessageFromImage = async (imageFile, bitsToReplace) => {
 
 				// Используем TextDecoder для декодирования UTF-8
 				const decoder = new TextDecoder('utf-8')
-				const decodedMessage = decoder.decode(new Uint8Array(message.split('').map(c => c.charCodeAt(0))))
+				const decodedMessage = decoder.decode(
+					new Uint8Array(message.split('').map(c => c.charCodeAt(0)))
+				)
 				console.log('Сообщение: ' + decodedMessage)
 
 				resolve(decodedMessage)
@@ -259,14 +292,17 @@ const Lab_4 = () => {
 	}
 
 	const toggleBitSelection = bit => {
-		setSelectedBits(prev => (prev.includes(bit) ? prev.filter(b => b !== bit) : [...prev, bit]))
+		setSelectedBits(prev =>
+			prev.includes(bit) ? prev.filter(b => b !== bit) : [...prev, bit]
+		)
 	}
 
 	const handleEncrypt = async () => {
 		if (!uploadedFile || !inputMessage || selectedBits.length === 0) {
 			toast({
 				title: 'Ошибка',
-				description: 'Необходимо загрузить изображение, ввести сообщение и выбрать ключ',
+				description:
+					'Необходимо загрузить изображение, ввести сообщение и выбрать ключ',
 				status: 'error',
 				duration: 2000,
 				isClosable: true,
@@ -279,9 +315,13 @@ const Lab_4 = () => {
 			const downloadLinks = []
 
 			for (const bit of selectedBits) {
-				const encrypted = await encryptMessageInImage(uploadedFile, inputMessage, bit)
+				const { encrypted, countPixels } = await encryptMessageInImage(
+					uploadedFile,
+					inputMessage,
+					bit
+				)
 				const downloadLink = URL.createObjectURL(encrypted)
-				downloadLinks.push({ bit, link: downloadLink })
+				downloadLinks.push({ bit, link: downloadLink, countPixels })
 			}
 
 			downloadLinks.sort((a, b) => a.bit - b.bit)
@@ -291,20 +331,31 @@ const Lab_4 = () => {
 			setDrawerContent(
 				<>
 					<p>Сообщение зашифровано. Измененные изображения готовы.</p>
+					<p>Длина сообщения: {inputMessage.length}</p>
 					<div>
 						<p>Оригинальное изображение:</p>
-						<img src={originalImageUrl} alt="Original Image" style={{ maxWidth: '100%', marginBottom: '10px' }} />
+						<img
+							src={originalImageUrl}
+							alt='Original Image'
+							style={{ maxWidth: '100%', marginBottom: '10px' }}
+						/>
 					</div>
 
-					{downloadLinks.map(({ bit, link }) => (
+					{downloadLinks.map(({ bit, link, countPixels }) => (
 						<div key={bit}>
 							<p>Изображение с {bit} битами заменёнными:</p>
 							<a href={link} download={`encrypted_${bit}bit.png`}>
-								<img src={link} alt={`Encrypted Image (${bit} bits)`} style={{ maxWidth: '100%', marginBottom: '10px' }} />
+								<img
+									src={link}
+									alt={`Зашифровано (${bit} бит)`}
+									style={{ maxWidth: '100%', marginBottom: '10px' }}
+								/>
 							</a>
+							<p>Использовано {countPixels} для шифрования </p>
+							<br></br>
 						</div>
 					))}
-				</>,
+				</>
 			)
 
 			onOpen()
@@ -335,7 +386,10 @@ const Lab_4 = () => {
 			const decryptedMessages = []
 			// Дешифруем сообщение с использованием 1 бита
 			for (let bit of selectedBits) {
-				const decryptedMessage = await decryptMessageFromImage(uploadedFile, bit)
+				const decryptedMessage = await decryptMessageFromImage(
+					uploadedFile,
+					bit
+				)
 				decryptedMessages.push({ bit, decryptedMessage })
 			}
 
@@ -344,18 +398,31 @@ const Lab_4 = () => {
 					<List spacing={4}>
 						{decryptedMessages.map(({ bit, decryptedMessage }) => (
 							<ListItem key={bit}>
-								<Box p={4} bg="gray.50" borderRadius="md" boxShadow="md" mb={4}>
-									<Text fontSize="md" fontWeight="semibold" color="gray.600" mb={2}>
+								<Box p={4} bg='gray.50' borderRadius='md' boxShadow='md' mb={4}>
+									<Text
+										fontSize='md'
+										fontWeight='semibold'
+										color='gray.600'
+										mb={2}
+									>
 										Для ключа <strong>{bit}</strong>:
 									</Text>
-									<Text fontSize="sm" color="gray.500" bg="white" borderRadius="md" p={2} boxShadow="sm" wordBreak="break-word">
+									<Text
+										fontSize='sm'
+										color='gray.500'
+										bg='white'
+										borderRadius='md'
+										p={2}
+										boxShadow='sm'
+										wordBreak='break-word'
+									>
 										{decryptedMessage}
 									</Text>
 								</Box>
 							</ListItem>
 						))}
 					</List>
-				</>,
+				</>
 			)
 
 			// setDrawerContent(
@@ -387,62 +454,79 @@ const Lab_4 = () => {
 	}
 
 	return (
-		<Container maxW="800px" h="100vh" display="flex" alignItems="center" justifyContent="center">
+		<Container
+			maxW='800px'
+			h='100vh'
+			display='flex'
+			alignItems='center'
+			justifyContent='center'
+		>
 			<VStack spacing={4}>
 				<p>Кол-во шифрующих бит</p>
 				<HStack>
 					{[1, 2, 3, 4, 5, 6, 7, 8].map(bit => (
-						<Checkbox key={bit} isChecked={selectedBits.includes(bit)} onChange={() => toggleBitSelection(bit)}>
+						<Checkbox
+							key={bit}
+							isChecked={selectedBits.includes(bit)}
+							onChange={() => toggleBitSelection(bit)}
+						>
 							{bit}
 						</Checkbox>
 					))}
 				</HStack>
 
-				<Box display="flex" flexDirection="column" alignItems="center">
+				<Box display='flex' flexDirection='column' alignItems='center'>
 					{/* Скрытый input */}
-					<Input type="file" accept="image/*" onChange={handleFileUpload} id="file-upload" style={{ display: 'none' }} />
+					<Input
+						type='file'
+						accept='image/*'
+						onChange={handleFileUpload}
+						id='file-upload'
+						style={{ display: 'none' }}
+					/>
 
 					{/* Кастомная кнопка */}
-					<label htmlFor="file-upload">
+					<label htmlFor='file-upload'>
 						<Button
-							variant="outline"
-							as="span"
-							width="325px"
-							fontWeight="bold"
+							variant='outline'
+							as='span'
+							width='325px'
+							fontWeight='bold'
 							colorScheme={uploadedFile ? 'green' : 'teal'} // Меняем цвет кнопки
 							leftIcon={uploadedFile ? <CheckCircleIcon /> : <DownloadIcon />} // Меняем иконку
-							cursor="pointer"
+							cursor='pointer'
 							_hover={{ bg: uploadedFile ? 'green.400' : 'teal.400' }} // Меняем hover-эффект
 						>
-							{uploadedFile ? 'Файл загружен' : 'Загрузить изображение'} {/* Меняем текст */}
+							{uploadedFile ? 'Файл загружен' : 'Загрузить изображение'}{' '}
+							{/* Меняем текст */}
 						</Button>
 					</label>
 				</Box>
 				<Textarea
-					placeholder="Введите сообщение для шифрования"
+					placeholder='Введите сообщение для шифрования'
 					value={inputMessage}
 					onChange={e => setInputMessage(e.target.value)}
-					resize="vertical"
-					width="325px"
-					maxHeight="200px"
-					overflow="auto"
+					resize='vertical'
+					width='325px'
+					maxHeight='200px'
+					overflow='auto'
 				/>
-				<Button colorScheme="teal" onClick={handleEncrypt}>
+				<Button colorScheme='teal' onClick={handleEncrypt}>
 					Зашифровать сообщение
 				</Button>
-				<Button colorScheme="red" onClick={handleDecrypt}>
+				<Button colorScheme='red' onClick={handleDecrypt}>
 					Дешифровать сообщение
 				</Button>
 			</VStack>
 
-			<Drawer isOpen={isOpen} placement="right" onClose={onClose} size={'md'}>
+			<Drawer isOpen={isOpen} placement='right' onClose={onClose} size={'md'}>
 				<DrawerOverlay />
 				<DrawerContent>
 					<DrawerCloseButton />
 					<DrawerHeader>Результат</DrawerHeader>
 					<DrawerBody>{drawerContent}</DrawerBody>
 					<DrawerFooter>
-						<Button variant="outline" mr={3} onClick={onClose}>
+						<Button variant='outline' mr={3} onClick={onClose}>
 							Закрыть
 						</Button>
 					</DrawerFooter>
