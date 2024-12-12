@@ -103,13 +103,69 @@ const Lab_3 = () => {
 			.map(char => huffmanCodes[char])
 			.join('')
 
-		setDrawerContent(encodedMessage)
 		setCodesMap(huffmanCodes)
+		const binaryMessage = message
+			.split('')
+			.map(char => char.charCodeAt(0).toString(2))
+			.join('')
+
+		console.log(
+			'бинарное сообщение' +
+				message.split('').map(char => char.charCodeAt(0).toString(2))
+		)
+
+		console.log('Исходная длина: ' + binaryMessage.length + 'бит')
+		console.log('Длина сжатого сообщения: ' + encodedMessage.length + 'бит')
+		console.log(freqTable)
+
+		setDrawerContent(
+			<>
+				<Box mb={2}>
+					<p onClick={handleCopy} cursor='pointer'>
+						Начальное сообщение: <Code width={'md'}>{inputValue}</Code>
+					</p>
+				</Box>
+
+				<Box mb={2}>
+					<p onClick={handleCopy} style={{ cursor: 'pointer' }}>
+						Зашифрованное сообщение: <Code width={'md'}>{encodedMessage}</Code>
+					</p>
+				</Box>
+
+				<Box mt={4} mb={4}>
+					<p>Кодировка символов:</p>
+					<Box>
+						{Object.entries(huffmanCodes).map(([char, code], index) => (
+							<p key={index}>
+								<b>{char}</b>: {code}
+							</p>
+						))}
+					</Box>
+				</Box>
+
+				<Box mb={2}>
+					<p>Длина исходного сообщения: {binaryMessage.length} бит</p>
+					<p>Длина сжатого сообщения: {encodedMessage.length} бит</p>
+					{/* <p>
+						Сэкономлено памяти: {binaryMessage.length - encodedMessage.length}
+						бит -{' '}
+						{Math.floor(
+							((binaryMessage.length - encodedMessage.length) /
+								binaryMessage.length) *
+								100
+						)}
+						%
+					</p> */}
+				</Box>
+			</>
+		)
 		onOpen()
 	}
 
 	const handleDecrypt = (message, codeMap) => {
-		const reverseCodeMap = Object.fromEntries(Object.entries(codeMap).map(([char, code]) => [code, char]))
+		const reverseCodeMap = Object.fromEntries(
+			Object.entries(codeMap).map(([char, code]) => [code, char])
+		)
 
 		let result = ''
 		let curCode = ''
@@ -156,55 +212,41 @@ const Lab_3 = () => {
 	}
 
 	return (
-		<Container maxW="800px" h="100vh" display="flex" alignItems="center" justifyContent="center">
+		<Container
+			maxW='800px'
+			h='100vh'
+			display='flex'
+			alignItems='center'
+			justifyContent='center'
+		>
 			<VStack spacing={4}>
 				<Input
-					type="search"
-					placeholder="Введите что угодно..."
+					type='search'
+					placeholder='Введите что угодно...'
 					value={inputValue}
 					onChange={e => setInputValue(e.target.value)}
 				/>
-				<Button colorScheme="teal" onClick={() => handleEncrypt(inputValue)}>
+				<Button colorScheme='teal' onClick={() => handleEncrypt(inputValue)}>
 					Зашифровать сообщение
 				</Button>
-				<Button colorScheme="red" onClick={() => handleDecrypt(inputValue, codesMap)}>
+				<Button
+					colorScheme='red'
+					onClick={() => handleDecrypt(inputValue, codesMap)}
+				>
 					Расшифровать сообщение
 				</Button>
 			</VStack>
 
-			<Drawer isOpen={isOpen} placement="right" onClose={onClose} size={'md'}>
+			<Drawer isOpen={isOpen} placement='right' onClose={onClose} size={'md'}>
 				<DrawerOverlay />
 				<DrawerContent>
 					<DrawerCloseButton />
 					<DrawerHeader>Результат</DrawerHeader>
 
-					<DrawerBody>
-						<Box mb={2}>
-							<p onClick={handleCopy} cursor="pointer">
-								Начальное сообщение: <Code width={'md'}>{inputValue}</Code>
-							</p>
-						</Box>
-
-						<Box mb={2}>
-							<p onClick={handleCopy} style={{ cursor: 'pointer' }}>
-								Зашифрованное сообщение: <Code width={'md'}>{drawerContent}</Code>
-							</p>
-						</Box>
-
-						<Box mt={4}>
-							<p>Кодировка символов:</p>
-							<Box>
-								{Object.entries(codesMap).map(([char, code], index) => (
-									<p key={index}>
-										<b>{char}</b>: {code}
-									</p>
-								))}
-							</Box>
-						</Box>
-					</DrawerBody>
+					<DrawerBody>{drawerContent}</DrawerBody>
 
 					<DrawerFooter>
-						<Button variant="outline" mr={3} onClick={onClose}>
+						<Button variant='outline' mr={3} onClick={onClose}>
 							Закрыть
 						</Button>
 					</DrawerFooter>
